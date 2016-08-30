@@ -1,0 +1,246 @@
+Script started on Wed 21 Oct 2015 12:26:07 AM EDT
+]0;nikita@HuKaToH: ~/Seneca/oop345/w5nikita@HuKaToH:~/Seneca/oop345/w5$ whoami
+mkoren
+]0;nikita@HuKaToH: ~/Seneca/oop345/w5nikita@HuKaToH:~/Seneca/oop345/w5$ cat w5.cpp Notifications.* Message.*
+// Workshop 5 - Containers
+ // w5.cpp
+
+ #include <iostream>
+ #include <fstream>
+ #include "Message.h"
+ #include "Notifications.h"
+
+ const char REC_DELIMITER = '\n';
+
+ w5::Notifications collect(std::ifstream& in, char recDelim) {
+     w5::Notifications notifications;
+
+     do {
+         w5::Message message(in, recDelim);
+         if (!message.empty())
+             notifications += std::move(message);
+     } while(in);
+
+     return notifications;
+ }
+
+ int main(int argc, char* argv[]) {
+     if (argc == 1) {
+         std::cerr << argv[0] << ": missing file operand\n";
+         return 1;
+     }
+     else if (argc != 2) {
+         std::cerr << argv[0] << ": too many arguments\n";
+         return 2;
+     }
+     std::ifstream file(argv[1]);
+     if (!file) {
+         std::cerr << argv[0] << "\n: Failed to open " << argv[1] << "\n"; 
+         return 3;
+     }
+
+     std::cout << "\nNotifications\n=============\n\n";
+     w5::Notifications notifications = collect(file, REC_DELIMITER);
+
+     notifications.display(std::cout);
+
+     std::cout << "Press any key to continue ... ";
+     std::cin.get();
+ }#include "Notifications.h"
+namespace w5 {
+Notifications::Notifications()
+{
+    saved = 0;
+    for (int i = 0; i < 10; ++i)
+        msg[i] = new Message();
+
+}
+Notifications::Notifications(const Notifications& src)
+{
+    saved=src.saved;
+    for (int i = 0; i<saved;i++)
+        msg[i] = src.msg[i];
+}
+Notifications& Notifications::operator=(const Notifications& src)
+{
+    if (this != &src)
+    {
+        saved = src.saved;
+        for (int i = 0; i<saved;i++)
+            msg[i] = src.msg[i];
+    }
+    return *this;
+}
+Notifications::Notifications(Notifications&& src)
+{
+        saved = src.saved;
+        for (int i = 0; i < src.saved; i++)
+        {
+            msg[i] = src.msg[i];
+        }
+    
+    for (int i = 0; i < src.saved; ++i)
+    {
+        delete src.msg[i];
+        src.msg[i] = NULL;
+    }
+}
+    
+Notifications& Notifications::operator=(Notifications&& src)
+{
+    if (this != &src)
+    {
+        saved = src.saved;
+        src.saved = 0;
+        for (int i = 0; i<saved;i++)
+        {
+            msg[i] = src.msg[i];
+        }
+        
+        for (int i = 0; i < saved; ++i)
+        {
+            delete src.msg[i];
+            src.msg[i] = NULL;
+        }
+    }
+    return *this;
+}
+    
+Notifications::~Notifications()
+{
+    if (saved > 0)
+    {
+        for (int i = 0; i < saved; ++i)
+        {
+            delete msg[i];
+            msg[i] = NULL;
+        }
+    }
+}
+void Notifications::operator+=(const Message& msg)
+{
+    if (saved < 10)
+    {
+        saved++;
+        *this->msg[saved] = msg;
+    }
+}
+    
+void Notifications::display(std::ostream& os) const
+{
+
+    for (int i = 1; i<saved+1;i++)
+        msg[i]->display(std::cout);
+    
+}
+
+}//w5#pragma once
+#include <iostream>
+#include "Message.h"
+namespace w5{
+class Notifications
+{
+    int saved;
+    Message* msg[10];
+public:
+    Notifications();
+    Notifications(const Notifications& src);
+    Notifications& operator=(const Notifications& src);
+    Notifications(Notifications&& src);
+    Notifications& operator=(Notifications&& src);
+    ~Notifications();
+    void operator+=(const Message& msg);
+    void display(std::ostream& os) const;
+};
+}//w5#include "Message.h"
+
+namespace w5 {
+
+    Message::Message() { }
+
+    Message::Message(std::ifstream &in, char c)
+    {
+
+        char x;
+        getline(in, user, ' ');
+
+
+        if(in.peek() == '@') {
+            x = in.get();
+            getline(in, reply, ' ');
+        }
+
+        getline(in, tweet, c);
+
+    }
+
+    bool Message::empty() const
+    {
+        if (reply == "" && tweet == "") {
+            return true;
+        } else {
+            return false;
+        }
+    }
+
+    void Message::display(std::ostream &os) const
+    {
+        os << "Message" << std::endl;
+
+
+        if(!user.empty()) {
+            os << "  User: ";
+            os << user << std::endl;
+
+
+            if(reply != "") {
+                os << "  Reply: ";
+                os << reply << std::endl;
+            }
+            os << "  Tweet: ";
+            os << tweet << std::endl;
+        }
+    }
+//w5
+}#pragma once
+#include <iostream>
+#include <fstream>
+
+namespace w5{
+class Message{
+    std::string user;
+    std::string reply;
+    std::string tweet;
+    
+    
+public:
+Message();
+Message(std::ifstream& in, char c);
+bool empty() const;
+void display(std::ostream& os) const;
+};
+}//w5]0;nikita@HuKaToH: ~/Seneca/oop345/w5nikita@HuKaToH:~/Seneca/oop345/w5$ g++ -o w5 -std=c++0x w5.cpp Notifications.cpp  Message.cpp
+]0;nikita@HuKaToH: ~/Seneca/oop345/w5nikita@HuKaToH:~/Seneca/oop345/w5$ ./w5 test.dat
+
+Notifications
+=============
+
+Message
+  User: jim
+  Tweet: Workshop 5 is cool
+Message
+  User: harry
+  Reply: jim
+  Tweet: working on workshop 5 now
+Message
+  User: dave
+  Tweet: what the ^#$%!
+Message
+  User: john
+  Reply: harry
+  Tweet: I'm done
+Press any key to continue ... 
+]0;nikita@HuKaToH: ~/Seneca/oop345/w5nikita@HuKaToH:~/Seneca/oop345/w5$ exit
+exit
+
+Script done on Wed 21 Oct 2015 12:28:49 AM EDT

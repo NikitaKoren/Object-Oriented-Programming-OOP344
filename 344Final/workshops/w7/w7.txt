@@ -1,0 +1,217 @@
+Script started on Wed 04 Nov 2015 12:00:10 AM EST
+]0;nikita@HuKaToH: ~/Seneca/oop345/w7nikita@HuKaToH:~/Seneca/oop345/w7$ whoami
+nikita
+]0;nikita@HuKaToH: ~/Seneca/oop345/w7nikita@HuKaToH:~/Seneca/oop345/w7$ cat *.cpp *.h
+// Workshop 7 - STL Containers
+// w7.cpp
+
+#include <iostream>
+#include <string>
+#include "Sale.h"
+
+using namespace w7;
+
+int main(int argc, char** argv) {
+	if (argc != 2) {
+		std::cerr << argv[0] << ": incorrect number of arguments\n";
+		std::cerr << "Usage: " << argv[0] << " file_name\n";
+		return 1;
+	}
+
+	Sale sale(argv[1]);
+	sale.display(std::cout);
+
+	std::cout << "\nPress any key to continue ... ";
+	std::cin.get();
+}
+#ifndef _I_PRODUCT_H_
+#define _I_PRODUCT_H_
+
+// Workshop 7 - STL Containers
+// iProduct.h
+
+#include <iostream>
+#include <fstream>
+
+//namespace w7 {
+
+	class iProduct {
+	public:
+		virtual double getCharge() const = 0;
+		virtual void display(std::ostream&) const = 0;
+	};
+
+	std::ostream& operator<<(std::ostream&, const iProduct&);
+	iProduct* readProduct(std::ifstream&);
+
+//}
+#endif
+#include <iostream>
+#include <iomanip>
+#include <fstream>
+#include <sstream>
+#include "iProduct.h"
+
+
+class Product : public virtual iProduct {
+	int code;
+	double price;
+public:
+	Product() {
+		code = -1;
+		price = -1.00;
+	}
+
+	Product(int num, double p) : code(num), price(p) {}
+
+	double getCharge() const{
+		return price;
+	}
+
+	void display(std::ostream& os) const {
+		os << std::setw(10) << std::right << code << "     " <<
+			std::setw(6) << std::left << price;
+	}
+};
+
+
+class Taxable : public Product {
+
+	double t1;
+	double t2;
+	char type;
+public:
+	Taxable(int num, double price, const char t) : Product(num, price) {
+		type = t;
+	}
+
+	double getCharge() const{
+		if (type == 'H'){
+			double _t1 = Product::getCharge();
+                            double t1=1.13;
+			return _t1*t1;
+                            
+		}
+		else if (type == 'P'){
+			double _t2 = Product::getCharge();
+                            double t2=1.08;
+			return _t2*t2;
+                           
+		} else {
+			double _t3 = Product::getCharge();
+			return _t3;
+		}
+	}
+
+	void display(std::ostream& os) const {
+		Product::display(os);
+
+                      if(type == 'H')
+                          os<<"HST";
+                      else if(type == 'P')
+                          os<<"PST";
+                      else
+                           os<<' ';
+	}
+};
+
+	
+	std::ostream& operator<<(std::ostream& os, const iProduct& p) {
+		p.display(os);
+		return os;
+	}
+
+	//read the file
+	iProduct* readProduct(std::ifstream& is) {
+		iProduct* product = nullptr;
+
+		int num = 0;
+		double price = 0.0;
+		char tax;
+		std::stringstream bufferStream;
+		std::string buffer;
+
+		std::getline(is, buffer);
+		if (!buffer.empty()) {
+			bufferStream << buffer;
+
+			bufferStream >> num >> price;
+			if (!bufferStream.eof()){
+				bufferStream >> tax;
+				product = new Taxable(num, price, tax);
+			}
+			else product = new Product(num, price);
+		}
+		return product;
+	}
+
+#include <iostream>
+#include <fstream>
+#include <string>
+#include <iomanip>
+#include <vector>
+#include <exception>
+
+//include files
+#include "iProduct.h"
+#include "Product.h"
+
+
+using namespace std;
+
+namespace w7{
+
+	class Sale {
+		fstream fs;
+		iProduct* temp;
+		std::vector<iProduct*> product;
+
+	public:
+		Sale(char* filename){
+
+			std::ifstream fs(filename);
+			
+			// read from the file
+			while (!fs.eof()) {
+				temp = readProduct(fs);
+
+				if (temp != nullptr){
+					product.push_back(std::move(temp));
+				}
+			}
+			
+			fs.close();
+		}
+		void display(std::ostream& os) const {
+			double total = 0.0; // stores total 
+			std::cout << endl << "Product No     Cost Taxable" << endl;
+			std::cout << std::fixed << std::setprecision(2);
+			
+			for (auto i = 0; i < product.size(); i++) {
+				total += product[i]->getCharge();
+				std::cout << *product[i]  << std::endl;
+			}
+
+			// display total
+			std::cout << "     Total";
+			std::cout << std::setw(10) << std::right << total << std::endl;
+		}
+	};
+}
+]0;nikita@HuKaToH: ~/Seneca/oop345/w7nikita@HuKaToH:~/Seneca/oop345/w7$ fs.close();[K[K[K[K[K[K[K[K[K[K[Kcat *.cpp *.h[7Pwhoami[2Pexit[2Plswhoami[2Pexitscript w7.txtg++ -std=c++0x w7.cppls[Kcd w7/[4Plsmv 2w7/ w7ls[Kcd ../g++ -std=c++0x w7.cppls[Kcd 2w7/ls[Kcd ../g++ -std=c++0x w7.cppls[Kcd w7/[4Plsg++ -std=c++0x w7.cpp
+]0;nikita@HuKaToH: ~/Seneca/oop345/w7nikita@HuKaToH:~/Seneca/oop345/w7$ ./a.out Sales.dat 
+
+Product No     Cost Taxable
+     10012     34.56 
+     10023     45.67 HST
+     10234     12.32 PST
+     10056     67.54 
+     10029     54.12 HST
+     10034     96.30 
+     Total    324.47
+
+Press any key to continue ... 
+]0;nikita@HuKaToH: ~/Seneca/oop345/w7nikita@HuKaToH:~/Seneca/oop345/w7$ exit
+exit
+
+Script done on Wed 04 Nov 2015 12:01:21 AM EST

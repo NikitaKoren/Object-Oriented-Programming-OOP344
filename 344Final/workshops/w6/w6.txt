@@ -1,0 +1,169 @@
+Script started on Tue 03 Nov 2015 10:42:13 PM EST
+]0;nikita@HuKaToH: ~/Seneca/oop345/w6nikita@HuKaToH:~/Seneca/oop345/w6$ whoami
+nikita
+]0;nikita@HuKaToH: ~/Seneca/oop345/w6nikita@HuKaToH:~/Seneca/oop345/w6$ cat main.cpp Grades.h 
+// Workshop 6 - Lambda Expression
+// w6.cpp
+
+#include <iostream>
+#include "Grades.h"
+
+int main(int argc, char* argv[]) {
+
+    if (argc != 2) {
+        std::cerr << argv[0] <<
+        ": incorrect number of arguments\n";
+        std::cerr << "Usage: " << argv[0] << " file_name\n";
+        return 1;
+    }
+
+
+    Grades grades(argv[1]);
+
+    // define the lambda expression for letter
+    auto letter = [](float grade) -> string {
+
+        return
+                grade >= 90? string("A+") :
+                grade >= 80? string("A")  :
+                grade >= 75? string("B+") :
+                grade >= 70? string("B")  :
+                grade >= 65? string("C+") :
+                grade >= 60? string("C")  :
+                grade >= 55? string("D+") :
+                grade >= 50? string("D")  :
+                string("F");
+    };
+
+
+
+    grades.displayGrades(std::cout, letter);
+    std::cout << "Press any key to continue ... ";
+    std::cin.get();
+}#pragma once
+#include <iostream>
+#include <string>
+#include <fstream>
+#include "string"
+#include <iomanip>
+
+using namespace std;
+
+// Class Grades holds the grades for all students in a course.
+class Grades {
+
+    //associative arrays
+    float*  _grade;        // stores student's grade
+    string* _studentID;    // stores student's ID
+    int _arr_size;         // stores amount of elements in the arrays
+
+
+    //prevent the copying, moving and assigning of an object
+    Grades (const Grades&)           = delete; // copy
+    Grades& operator=(const Grades&) = delete; // assignment
+    Grades(Grades&&)                 = delete; // move
+    Grades&operator=(Grades&&)       = delete; // move assignment
+
+
+public:
+
+    Grades(char* filename) {
+
+        int size = 5; //default size of a file
+        ifstream file(filename);
+        if(!file) {
+           throw "Failed to open a file!";
+        }
+
+
+        string* line;
+        line = new string [size];
+        int count = 0; //count the amount of records in a file
+
+        //read from the file into line
+        while(getline(file, line[count])){
+
+            // allocates more memory (if needed)
+            if(count == size - 1) {
+
+                //temp variable to store data from line
+                string temp[size];
+
+                //copy data into temp array
+                for(int i = 0; i < size; i++)
+                    temp[i] = line[i];
+
+                delete [] line;
+
+                //allocate more memory
+                line = new string[size*2];
+
+                //copy old data into new allocated array
+                for(int i = 0; i < size; i++)
+                    line[i] = temp[i];
+
+                // increase size
+                size *= 2;
+            }
+
+            count++;
+        }
+
+        file.close();
+
+        _arr_size = count; // set the final amount of elements
+
+        //allocate memory
+        _grade     = new float[_arr_size];
+        _studentID = new string [_arr_size];
+
+
+        // save data from a file into associative arrays in a class
+        size_t length;
+        size_t space;
+        for(int i = 0; i < _arr_size; i++) {
+
+            //split string into 2 variables
+            length = line[i].length();
+            space = line[i].find(' ');
+
+            _studentID[i] = line[i].substr(0,space);     //save into the first array
+            _grade[i]     = stof(line[i].substr(space)); //convert to float and save into the second array
+
+        }
+
+        delete [] line;
+    }
+
+    //letter is a lambda function in main
+   void displayGrades(ostream& os, string (*letter)(float)) const {
+        
+       for(int i = 0; i < _arr_size; i++)
+        os << _studentID[i] << " " << fixed << setprecision (2) << _grade[i] << " " << letter(_grade[i]) << endl;
+   }
+
+    ~Grades(){
+
+        delete [] _grade;
+        delete [] _studentID;
+    }
+
+
+
+};
+]0;nikita@HuKaToH: ~/Seneca/oop345/w6nikita@HuKaToH:~/Seneca/oop345/w6$ g++ -std="c++0x" -o w6 w6.cpp[C[C[C[C[C[1P.cpp[1P.cppm.cppa.cppi.cppn.cpp
+]0;nikita@HuKaToH: ~/Seneca/oop345/w6nikita@HuKaToH:~/Seneca/oop345/w6$ w.[K[K./w6 w6.dat
+1022342 67.40 C+
+1024567 73.50 B
+2031456 79.30 B+
+6032144 53.50 D
+1053250 92.10 A+
+3026721 86.50 A
+7420134 62.30 C
+9762314 58.70 D+
+6521045 34.60 F
+Press any key to continue ... 
+]0;nikita@HuKaToH: ~/Seneca/oop345/w6nikita@HuKaToH:~/Seneca/oop345/w6$ exit
+exit
+
+Script done on Tue 03 Nov 2015 10:43:03 PM EST
